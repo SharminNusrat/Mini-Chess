@@ -52,7 +52,7 @@ THEME_FONT = pygame.font.SysFont("arial", 18)
 class MiniChess5x6:
     def __init__(self):
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
-        pygame.display.set_caption("MiniChess 5x6")
+        pygame.display.set_caption("ChessChamp")
         
         self.state = "main_menu"  # main_menu, game, theme_menu
         self.current_theme = "Classic Wood"
@@ -91,7 +91,7 @@ class MiniChess5x6:
         self.screen.fill((50, 50, 70))
         
         # Title
-        title = TITLE_FONT.render("MiniChess 5x6", True, (255, 215, 0))
+        title = TITLE_FONT.render("ChessChamp", True, (255, 215, 0))
         title_rect = title.get_rect(center=(WIDTH//2, 150))
         self.screen.blit(title, title_rect)
         
