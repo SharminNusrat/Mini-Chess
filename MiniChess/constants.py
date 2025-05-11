@@ -60,5 +60,6 @@ THEME_FONT_SIZE = 18
 
 # Game states
 MAIN_MENU = "main_menu"
+SETUP_MENU = "setup_menu"
 GAME = "game"
 THEME_MENU = "theme_menu"
