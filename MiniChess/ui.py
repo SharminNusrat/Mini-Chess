@@ -12,6 +12,9 @@ class UI:
         self.STATUS_FONT = pygame.font.SysFont(STATUS_FONT_NAME, STATUS_FONT_SIZE)
         self.PIECE_FONT = pygame.font.SysFont(PIECE_FONT_NAME, PIECE_FONT_SIZE)
         self.THEME_FONT = pygame.font.SysFont(THEME_FONT_NAME, THEME_FONT_SIZE)
+        
+        # Store button rectangles for event handling
+        self.button_rects = {}
     
     def draw_main_menu(self):
         """Draw the main menu screen"""
@@ -100,8 +103,6 @@ class UI:
         self.screen.blit(back_text, (back_rect.centerx - 25, back_rect.centery - 10))
         
         pygame.display.flip()
-        
-        return back_rect
     
     def draw_game(self, board, current_theme, current_player, selected_square, valid_moves):
         """Draw the game board and interface"""
@@ -115,9 +116,9 @@ class UI:
                 y = MARGIN_Y + row * SQUARE_SIZE
                 
                 # Square color
-                if (row, col) == selected_square:
+                if selected_square and (row, col) == selected_square:
                     color = HIGHLIGHT_COLOR
-                elif (row, col) in valid_moves:
+                elif valid_moves and (row, col) in valid_moves:
                     color = VALID_MOVE_COLOR
                 elif (row + col) % 2 == 0:
                     color = theme["light"]
@@ -162,6 +163,13 @@ class UI:
         redo_rect = pygame.Rect(WIDTH - 120, HEIGHT - 35, 80, 30)
         theme_rect = pygame.Rect(WIDTH - 350, HEIGHT - 35, 110, 30)
         
+        # Store button rectangles for event handling
+        self.button_rects = {
+            "undo": undo_rect,
+            "redo": redo_rect,
+            "theme": theme_rect
+        }
+        
         # Draw buttons
         pygame.draw.rect(self.screen, BUTTON_COLOR, undo_rect, border_radius=5)
         pygame.draw.rect(self.screen, BUTTON_COLOR, redo_rect, border_radius=5)
@@ -180,8 +188,10 @@ class UI:
                                     theme_rect.centery - theme_text.get_height()//2))
         
         pygame.display.flip()
-        
-        return undo_rect, redo_rect, theme_rect
+    
+    def get_button_rects(self):
+        """Return button rectangles for event handling"""
+        return self.button_rects
     
     def check_main_menu_click(self, pos):
         """Check which option was clicked in the main menu"""
@@ -211,4 +221,9 @@ class UI:
             HEIGHT - 60 <= pos[1] <= HEIGHT - 20):
             return "back"
         
+        return None
+        
+    def check_game_over_click(self, pos):
+        """Check clicks on game over screen"""
+        # This is a placeholder for now - we need to implement the game over screen
         return None
