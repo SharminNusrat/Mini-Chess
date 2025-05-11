@@ -48,6 +48,11 @@ class ChessBoard:
         moved_piece = self.board[from_row][from_col]
         captured_piece = self.board[to_row][to_col]
         
+        # Check if the move would put own king in check
+        color = moved_piece[0] if moved_piece else None
+        if color and self._would_be_in_check(color, from_pos, to_pos):
+            return False
+            
         # Save move to history for undo/redo
         self.move_history.append({
             'from': from_pos,
@@ -291,14 +296,15 @@ class ChessBoard:
     
     def check_game_end_conditions(self):
         """Check if the game has ended (checkmate or stalemate)"""
-        opponent = self.current_turn  # Current turn has already been switched
+        # Check for current player (not opponent) since we need to check if the player who's about to move is in checkmate
+        current_player = self.current_turn
         
-        if self.is_checkmate(opponent):
+        if self.is_checkmate(current_player):
             self.game_over = True
-            self.winner = 'white' if opponent == 'black' else 'black'
+            self.winner = 'black' if current_player == 'white' else 'white'
             return True
             
-        if self.is_stalemate(opponent):
+        if self.is_stalemate(current_player):
             self.game_over = True
             self.winner = 'draw'
             return True
@@ -307,12 +313,26 @@ class ChessBoard:
     
     def get_game_status(self):
         """Get the current state of the game."""
+        # Check for game over conditions first
+        if self.is_checkmate(self.current_turn):
+            opponent = 'black' if self.current_turn == 'white' else 'white'
+            self.game_over = True
+            self.winner = opponent
+            return f"Game Over - {opponent.capitalize()} wins by checkmate"
+            
+        if self.is_stalemate(self.current_turn):
+            self.game_over = True
+            self.winner = 'draw'
+            return "Game Over - Draw by stalemate"
+            
+        # If game is already marked as over
         if self.game_over:
             if self.winner == 'draw':
                 return "Game Over - Draw by stalemate"
             else:
                 return f"Game Over - {self.winner.capitalize()} wins by checkmate"
         
+        # Normal gameplay status
         if self.is_in_check(self.current_turn):
             return f"{self.current_turn.capitalize()} is in check"
             

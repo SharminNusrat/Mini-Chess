@@ -313,13 +313,10 @@ class MiniChess5x6:
                     elif self.state == SETUP_MENU:
                         setup_result = self.setup_menu.handle_click(pos)
                         if setup_result:
-                            # Apply settings from setup menu
                             self.white_player = setup_result["white_player"]
                             self.black_player = setup_result["black_player"]
                             self.reset_game()
                             self.state = GAME
-                            
-                            # If first player is AI, prepare for AI move
                             if self.chess_board.current_turn == "white" and self.white_player == "ai":
                                 self.ai_last_move_time = current_time
                     
@@ -327,24 +324,21 @@ class MiniChess5x6:
                         result = self.ui.check_theme_menu_click(pos)
                         if result == "back":
                             self.state = GAME
-                        elif result:  # A theme was selected
+                        elif result:
                             self.current_theme = result
                     
                     elif self.state == GAME:
-                        # Check if game over screen is shown
                         if self.chess_board.game_over:
                             game_over_action = self.ui.check_game_over_click(pos)
                             if game_over_action == "new_game":
-                                self.reset_game()
+                                self.state = SETUP_MENU
                             elif game_over_action == "quit":
                                 running = False
                         else:
-                            # Check if clicked on game board
                             if (MARGIN_X <= pos[0] < MARGIN_X + COLS*SQUARE_SIZE and 
                                 MARGIN_Y <= pos[1] < MARGIN_Y + ROWS*SQUARE_SIZE):
                                 self.handle_click(pos)
                             
-                            # Check button clicks
                             button_rects = self.ui.get_button_rects()
                             if "undo" in button_rects and button_rects["undo"].collidepoint(pos):
                                 self.undo_move()
@@ -358,7 +352,7 @@ class MiniChess5x6:
                 current_player_type = self.white_player if self.chess_board.current_turn == "white" else self.black_player
                 if current_player_type == "ai" and current_time - self.ai_last_move_time >= self.ai_think_time:
                     self.make_ai_move()
-                    self.ai_last_move_time = current_time  # Reset timer
+                    self.ai_last_move_time = current_time
             
             # Draw current state
             if self.state == MAIN_MENU:
@@ -369,15 +363,17 @@ class MiniChess5x6:
                 self.ui.draw_theme_menu(self.current_theme)
             elif self.state == GAME:
                 self.ui.draw_game(
-                    self.chess_board.board,  # Changed from self.chess_board to self.chess_board.board
+                    self.chess_board.board,
                     self.current_theme,
-                    self.chess_board.current_turn,  # Pass the current turn
+                    self.chess_board.current_turn,
                     self.selected_square,
-                    self.valid_moves
+                    self.valid_moves,
+                    self.chess_board.game_over,
+                    self.chess_board.winner
                 )
             
             # Cap the frame rate
             self.clock.tick(60)
-            
+        
         pygame.quit()
         sys.exit()
