@@ -30,6 +30,5 @@ def get_valid_moves(board, row, col):
                     break
                 else:
                     break
-    # Add logic for bishop, knight, king as needed
-
+    
     return moves

@@ -1,4 +1,3 @@
-# Constants for 5x6 board
 COLS, ROWS = 5, 6
 WIDTH, HEIGHT = 640, 740
 BOARD_WIDTH = 500
@@ -8,7 +7,6 @@ MARGIN_X = (WIDTH - BOARD_WIDTH) // 2
 MARGIN_Y = (HEIGHT - BOARD_HEIGHT) // 2 - 20
 PIECE_FONT_SIZE = SQUARE_SIZE - 20
 
-# Color themes (16 themes as per the original design)
 THEMES = {
     "Classic Wood": {"light": (240, 217, 181), "dark": (181, 136, 99)},
     "Modern Blue": {"light": (173, 216, 230), "dark": (100, 100, 150)},
@@ -28,7 +26,6 @@ THEMES = {
     "Zen Garden": {"light": (152, 251, 152), "dark": (107, 142, 35)}
 }
 
-# Chess pieces (Unicode)
 PIECES = {
     'white': {'king': '♔', 'queen': '♕', 'rook': '♖', 
               'bishop': '♗', 'knight': '♘', 'pawn': '♙'},
@@ -36,7 +33,6 @@ PIECES = {
               'bishop': '♝', 'knight': '♞', 'pawn': '♟'}
 }
 
-# Colors
 BACKGROUND_COLOR = (50, 50, 70)
 MENU_BACKGROUND = (40, 40, 60)
 BUTTON_COLOR = (80, 80, 120)
@@ -47,7 +43,6 @@ VALID_MOVE_COLOR = (247, 247, 105)
 COORDINATES_COLOR = (200, 200, 200)
 GOLD_COLOR = (255, 215, 0)
 
-# Font settings (not initialized here)
 TITLE_FONT_NAME = "georgia"
 TITLE_FONT_SIZE = 48
 MENU_FONT_NAME = "arial"
@@ -58,7 +53,6 @@ PIECE_FONT_NAME = "segoe ui symbol"
 THEME_FONT_NAME = "arial"
 THEME_FONT_SIZE = 18
 
-# Game states
 MAIN_MENU = "main_menu"
 SETUP_MENU = "setup_menu"
 GAME = "game"

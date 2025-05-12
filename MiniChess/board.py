@@ -13,12 +13,10 @@ class ChessBoard:
         """Initialize the 5x6 chess board with pieces"""
         board = [[None for _ in range(COLS)] for _ in range(ROWS)]
         
-        # Pawns
         for col in range(COLS):
             board[1][col] = ('black', 'pawn')
             board[4][col] = ('white', 'pawn')
         
-        # Other pieces (simplified setup for 5x6)
         back_row = ['rook', 'knight', 'bishop', 'queen', 'king']
         for col, piece in enumerate(back_row[:COLS]):
             board[0][col] = ('black', piece)
@@ -48,12 +46,10 @@ class ChessBoard:
         moved_piece = self.board[from_row][from_col]
         captured_piece = self.board[to_row][to_col]
         
-        # Check if the move would put own king in check
         color = moved_piece[0] if moved_piece else None
         if color and self._would_be_in_check(color, from_pos, to_pos):
             return False
             
-        # Save move to history for undo/redo
         self.move_history.append({
             'from': from_pos,
             'to': to_pos,
@@ -61,17 +57,12 @@ class ChessBoard:
             'captured': captured_piece
         })
         
-        # Move piece
         self.board[to_row][to_col] = self.board[from_row][from_col]
         self.board[from_row][from_col] = None
         
-        # Store the last moved piece for highlighting
         self.last_moved_piece = to_pos
         
-        # Switch turns
         self.current_turn = 'black' if self.current_turn == 'white' else 'white'
-        
-        # Check for checkmate or stalemate after the move
         self.check_game_end_conditions()
         
         return True
@@ -86,14 +77,11 @@ class ChessBoard:
         to_pos = move['to']
         captured = move['captured']
         
-        # Restore the pieces
         self.board[from_pos[0]][from_pos[1]] = self.board[to_pos[0]][to_pos[1]]
         self.board[to_pos[0]][to_pos[1]] = captured
         
-        # Restore the turn
         self.current_turn = 'black' if self.current_turn == 'white' else 'white'
         
-        # Reset game over state if needed
         if self.game_over:
             self.game_over = False
             self.winner = None
@@ -109,7 +97,6 @@ class ChessBoard:
         color, piece_type = piece
         possible_moves = self._get_possible_moves(row, col, color, piece_type)
         
-        # Filter moves that would leave the king in check
         legal_moves = []
         for move in possible_moves:
             if not self._would_be_in_check(color, (row, col), move):
@@ -123,12 +110,9 @@ class ChessBoard:
         
         if piece_type == 'pawn':
             direction = -1 if color == 'white' else 1
-            # Forward move
             new_row = row + direction
             if 0 <= new_row < ROWS and not self.board[new_row][col]:
                 moves.append((new_row, col))
-            
-            # Captures
             for dc in [-1, 1]:
                 new_col = col + dc
                 if 0 <= new_col < COLS and 0 <= new_row < ROWS:
@@ -137,7 +121,6 @@ class ChessBoard:
                         moves.append((new_row, new_col))
         
         elif piece_type == 'rook':
-            # Horizontal and vertical moves
             for dr, dc in [(-1,0), (1,0), (0,-1), (0,1)]:
                 for i in range(1, max(ROWS, COLS)):
                     r, c = row + dr*i, col + dc*i
@@ -152,7 +135,6 @@ class ChessBoard:
                         break
         
         elif piece_type == 'bishop':
-            # Diagonal moves
             for dr, dc in [(-1,-1), (-1,1), (1,-1), (1,1)]:
                 for i in range(1, max(ROWS, COLS)):
                     r, c = row + dr*i, col + dc*i
@@ -167,8 +149,6 @@ class ChessBoard:
                         break
                         
         elif piece_type == 'queen':
-            # Combined rook and bishop moves
-            # Horizontal and vertical moves (rook-like)
             for dr, dc in [(-1,0), (1,0), (0,-1), (0,1)]:
                 for i in range(1, max(ROWS, COLS)):
                     r, c = row + dr*i, col + dc*i
@@ -182,7 +162,6 @@ class ChessBoard:
                             moves.append((r, c))
                         break
             
-            # Diagonal moves (bishop-like)
             for dr, dc in [(-1,-1), (-1,1), (1,-1), (1,1)]:
                 for i in range(1, max(ROWS, COLS)):
                     r, c = row + dr*i, col + dc*i
@@ -197,7 +176,6 @@ class ChessBoard:
                         break
         
         elif piece_type == 'knight':
-            # Knight moves
             for dr, dc in [(-2,-1), (-2,1), (-1,-2), (-1,2), 
                           (1,-2), (1,2), (2,-1), (2,1)]:
                 r, c = row + dr, col + dc
@@ -207,7 +185,6 @@ class ChessBoard:
                         moves.append((r, c))
         
         elif piece_type == 'king':
-            # King moves
             for dr in [-1, 0, 1]:
                 for dc in [-1, 0, 1]:
                     if dr == 0 and dc == 0:
@@ -231,12 +208,10 @@ class ChessBoard:
     
     def is_in_check(self, color):
         """Determine if the specified color's king is in check."""
-        # Find king position
         king_pos = self._find_king(color)
         if not king_pos:
-            return False  # Should not happen in a valid game
+            return False  
 
-        # Check if any opponent piece can capture the king
         opponent_color = 'black' if color == 'white' else 'white'
         for row in range(ROWS):
             for col in range(COLS):
@@ -249,20 +224,16 @@ class ChessBoard:
     
     def _would_be_in_check(self, color, from_pos, to_pos):
         """Check if making a move would result in check."""
-        # Save current state
+
         from_row, from_col = from_pos
         to_row, to_col = to_pos
         moved_piece = self.board[from_row][from_col]
         captured_piece = self.board[to_row][to_col]
         
-        # Make temporary move
         self.board[to_row][to_col] = moved_piece
         self.board[from_row][from_col] = None
-        
-        # Check if king is in check
         in_check = self.is_in_check(color)
         
-        # Restore board
         self.board[from_row][from_col] = moved_piece
         self.board[to_row][to_col] = captured_piece
         
@@ -283,7 +254,6 @@ class ChessBoard:
         if not self.is_in_check(color):
             return False
             
-        # Check if any legal moves are available
         return not self.has_legal_moves(color)
     
     def is_stalemate(self, color):
@@ -291,12 +261,10 @@ class ChessBoard:
         if self.is_in_check(color):
             return False
             
-        # Check if any legal moves are available
         return not self.has_legal_moves(color)
     
     def check_game_end_conditions(self):
         """Check if the game has ended (checkmate or stalemate)"""
-        # Check for current player (not opponent) since we need to check if the player who's about to move is in checkmate
         current_player = self.current_turn
         
         if self.is_checkmate(current_player):
@@ -313,7 +281,6 @@ class ChessBoard:
     
     def get_game_status(self):
         """Get the current state of the game."""
-        # Check for game over conditions first
         if self.is_checkmate(self.current_turn):
             opponent = 'black' if self.current_turn == 'white' else 'white'
             self.game_over = True
@@ -325,14 +292,12 @@ class ChessBoard:
             self.winner = 'draw'
             return "Game Over - Draw by stalemate"
             
-        # If game is already marked as over
         if self.game_over:
             if self.winner == 'draw':
                 return "Game Over - Draw by stalemate"
             else:
                 return f"Game Over - {self.winner.capitalize()} wins by checkmate"
         
-        # Normal gameplay status
         if self.is_in_check(self.current_turn):
             return f"{self.current_turn.capitalize()} is in check"
             

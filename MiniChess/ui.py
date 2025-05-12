@@ -6,26 +6,22 @@ class UI:
     def __init__(self, screen):
         self.screen = screen
         
-        # Initialize fonts
         self.TITLE_FONT = pygame.font.SysFont(TITLE_FONT_NAME, TITLE_FONT_SIZE, bold=True)
         self.MENU_FONT = pygame.font.SysFont(MENU_FONT_NAME, MENU_FONT_SIZE)
         self.STATUS_FONT = pygame.font.SysFont(STATUS_FONT_NAME, STATUS_FONT_SIZE)
         self.PIECE_FONT = pygame.font.SysFont(PIECE_FONT_NAME, PIECE_FONT_SIZE)
         self.THEME_FONT = pygame.font.SysFont(THEME_FONT_NAME, THEME_FONT_SIZE)
         
-        # Store button rectangles for event handling
         self.button_rects = {}
     
     def draw_main_menu(self):
         """Draw the main menu screen"""
         self.screen.fill(BACKGROUND_COLOR)
         
-        # Title
         title = self.TITLE_FONT.render("ChessChamp", True, GOLD_COLOR)
         title_rect = title.get_rect(center=(WIDTH//2, 150))
         self.screen.blit(title, title_rect)
         
-        # Menu options
         mouse_pos = pygame.mouse.get_pos()
         options = ["New Game", "Quit"]
         
@@ -46,57 +42,45 @@ class UI:
         """Draw the theme selection menu with 2 columns"""
         self.screen.fill(MENU_BACKGROUND)
         
-        # Title
         title = self.MENU_FONT.render("Board Theme", True, TEXT_COLOR)
         self.screen.blit(title, (20, 20))
         
-        # Theme options in 2 columns (8 themes per column)
         mouse_pos = pygame.mouse.get_pos()
         theme_names = list(THEMES.keys())
         
-        # First column
         for i, theme in enumerate(theme_names[:8]):
             x = 20
             y = 70 + i * 40
             
-            # Checkbox
             checkbox = pygame.Rect(x, y + 5, 20, 20)
             pygame.draw.rect(self.screen, (200, 200, 200), checkbox, 2)
             
             if theme == current_theme:
                 pygame.draw.rect(self.screen, (100, 255, 100), checkbox.inflate(-4, -4))
             
-            # Theme name
             text = self.THEME_FONT.render(theme, True, TEXT_COLOR)
             self.screen.blit(text, (x + 30, y))
             
-            # Hover effect
             option_rect = pygame.Rect(x, y, WIDTH//2 - 30, 30)
             if option_rect.collidepoint(mouse_pos):
                 pygame.draw.rect(self.screen, BUTTON_COLOR, option_rect, border_radius=5)
-        
-        # Second column
         for i, theme in enumerate(theme_names[8:]):
             x = WIDTH // 2 + 10
             y = 70 + i * 40
             
-            # Checkbox
             checkbox = pygame.Rect(x, y + 5, 20, 20)
             pygame.draw.rect(self.screen, (200, 200, 200), checkbox, 2)
             
             if theme == current_theme:
                 pygame.draw.rect(self.screen, (100, 255, 100), checkbox.inflate(-4, -4))
             
-            # Theme name
             text = self.THEME_FONT.render(theme, True, TEXT_COLOR)
             self.screen.blit(text, (x + 30, y))
-            
-            # Hover effect
+        
             option_rect = pygame.Rect(x, y, WIDTH//2 - 30, 30)
             if option_rect.collidepoint(mouse_pos):
                 pygame.draw.rect(self.screen, BUTTON_COLOR, option_rect, border_radius=5)
         
-        # Back button
         back_rect = pygame.Rect(20, HEIGHT - 60, 100, 40)
         pygame.draw.rect(self.screen, BUTTON_COLOR, back_rect, border_radius=5)
         back_text = self.THEME_FONT.render("Back", True, TEXT_COLOR)
@@ -109,13 +93,11 @@ class UI:
         theme = THEMES[current_theme]
         self.screen.fill(BACKGROUND_COLOR)
         
-        # Draw board
         for row in range(ROWS):
             for col in range(COLS):
                 x = MARGIN_X + col * SQUARE_SIZE
                 y = MARGIN_Y + row * SQUARE_SIZE
                 
-                # Square color
                 if selected_square and (row, col) == selected_square:
                     color = HIGHLIGHT_COLOR
                 elif valid_moves and (row, col) in valid_moves:
@@ -127,7 +109,6 @@ class UI:
                 
                 pygame.draw.rect(self.screen, color, (x, y, SQUARE_SIZE, SQUARE_SIZE))
                 
-                # Draw piece
                 piece = board[row][col]
                 if piece:
                     color, piece_type = piece
@@ -136,7 +117,6 @@ class UI:
                     self.screen.blit(text, (x + SQUARE_SIZE//2 - text.get_width()//2, 
                                         y + SQUARE_SIZE//2 - text.get_height()//2))
         
-        # Draw coordinates
         for i in range(COLS):
             letter = chr(97 + i)
             text = self.STATUS_FONT.render(letter, True, COORDINATES_COLOR)
@@ -148,11 +128,11 @@ class UI:
             text = self.STATUS_FONT.render(number, True, COORDINATES_COLOR)
             self.screen.blit(text, (MARGIN_X - 25, MARGIN_Y + i*SQUARE_SIZE + SQUARE_SIZE//2 - 10))
         
-        # Draw status bar
+
         status_bar = pygame.Rect(0, HEIGHT - 40, WIDTH, 40)
         pygame.draw.rect(self.screen, STATUS_BAR_COLOR, status_bar)
         
-        # Turn indicator or game status
+        
         if game_over:
             if winner == "draw":
                 status_text = "Game Over - Draw"
@@ -163,24 +143,24 @@ class UI:
             turn_text = self.STATUS_FONT.render(f"{current_player.capitalize()}'s turn", True, TEXT_COLOR)
         self.screen.blit(turn_text, (20, HEIGHT - 30))
         
-        # Create button rectangles
+        
         undo_rect = pygame.Rect(WIDTH - 220, HEIGHT - 35, 80, 30)
         redo_rect = pygame.Rect(WIDTH - 120, HEIGHT - 35, 80, 30)
         theme_rect = pygame.Rect(WIDTH - 350, HEIGHT - 35, 110, 30)
         
-        # Store button rectangles for event handling
+        
         self.button_rects = {
             "undo": undo_rect,
             "redo": redo_rect,
             "theme": theme_rect
         }
         
-        # Draw buttons
+       
         pygame.draw.rect(self.screen, BUTTON_COLOR, undo_rect, border_radius=5)
         pygame.draw.rect(self.screen, BUTTON_COLOR, redo_rect, border_radius=5)
         pygame.draw.rect(self.screen, BUTTON_COLOR, theme_rect, border_radius=5)
         
-        # Draw button text
+        
         undo_text = self.STATUS_FONT.render("📄 Undo", True, TEXT_COLOR)
         redo_text = self.STATUS_FONT.render("🍀 Redo", True, TEXT_COLOR)
         theme_text = self.STATUS_FONT.render("Themes", True, TEXT_COLOR)
@@ -192,11 +172,11 @@ class UI:
         self.screen.blit(theme_text, (theme_rect.centerx - theme_text.get_width()//2, 
                                     theme_rect.centery - theme_text.get_height()//2))
         
-        # If game is over, draw the game over screen
+        
         if game_over:
             self.draw_game_over(winner)
         
-        # Update display only once
+        
         pygame.display.flip()
     def get_button_rects(self):
         """Return button rectangles for event handling"""
@@ -205,27 +185,27 @@ class UI:
     def check_main_menu_click(self, pos):
         """Check which option was clicked in the main menu"""
         if WIDTH//2 - 100 <= pos[0] <= WIDTH//2 + 100:
-            if 250 <= pos[1] <= 300:  # New Game
+            if 250 <= pos[1] <= 300:  
                 return "new_game"
-            elif 330 <= pos[1] <= 380:  # Quit
+            elif 330 <= pos[1] <= 380:  
                 return "quit"
         return None
     
     def check_theme_menu_click(self, pos):
         """Check which theme was clicked in the theme menu"""
-        # Check theme selection (first column)
+        
         for i in range(8):
             if (20 <= pos[0] <= WIDTH//2 - 10 and 
                 70 + i*40 <= pos[1] <= 110 + i*40):
                 return list(THEMES.keys())[i]
         
-        # Check theme selection (second column)
+        
         for i in range(8, 16):
             if (WIDTH//2 + 10 <= pos[0] <= WIDTH - 20 and 
                 70 + (i-8)*40 <= pos[1] <= 110 + (i-8)*40):
                 return list(THEMES.keys())[i]
         
-        # Check back button
+       
         if (20 <= pos[0] <= 120 and 
             HEIGHT - 60 <= pos[1] <= HEIGHT - 20):
             return "back"
