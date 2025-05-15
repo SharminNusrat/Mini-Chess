@@ -6,7 +6,7 @@ from constants import *
 from board import ChessBoard
 from ui import UI
 from game_setup import GameSetupMenu
-from ai import get_ai_move
+from ai import MiniChessAI
 
 class MiniChess5x6:
     def __init__(self):
@@ -91,17 +91,16 @@ class MiniChess5x6:
                     self.valid_moves = []
 
     def make_ai_move(self):
-        move = get_ai_move(self.chess_board.board, self.chess_board.current_turn, depth=3)
-        if move is None:
-            self.chess_board.check_game_end_conditions()
-            return
+        ai = MiniChessAI(depth=3)
+        move = ai.get_best_move(self.chess_board, self.chess_board.current_turn)
+        
         if move:
             from_sq, to_sq = move
             self.board_history = self.board_history[:self.history_index+1]
-            self.chess_board.move_piece(from_sq, to_sq)
-            self.board_history.append(self.chess_board.copy_board())
-            self.history_index += 1
-            return True
+            if self.chess_board.move_piece(from_sq, to_sq):
+                self.board_history.append(self.chess_board.copy_board())
+                self.history_index += 1
+                return True
         return False
     
     def undo_move(self):

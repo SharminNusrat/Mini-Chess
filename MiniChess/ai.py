@@ -1,198 +1,84 @@
-import copy
-from board import ChessBoard
+from copy import deepcopy
+from constants import COLS, ROWS
 
-PIECE_VALUES = {
-    'pawn': 100,
-    'knight': 320,
-    'bishop': 320,
-    'rook': 500,
-    'queen': 900,
-    'king': 20000
-}
+class MiniChessAI:
+    def __init__(self, depth=3):
+        self.depth = depth
+        self.piece_values = {
+            'pawn': 100,
+            'knight': 320,
+            'bishop': 330,
+            'rook': 500,
+            'queen': 900,
+            'king': 20000
+        }
 
-PIECE_ORDER = ['pawn', 'knight', 'bishop', 'rook', 'queen', 'king']
-OPTIMIZED_WEIGHTS = None
-
-CENTER_SQUARES = {(2, 2), (2, 3), (3, 2), (3, 3)}
-
-
-def evaluate_board(board, current_turn, move_made=None):
-    """Calculates a score for the board from current player's perspective."""
-    score = 0
-    opponent = 'black' if current_turn == 'white' else 'white'
-
-    # Base score using material and position
-    for r in range(len(board)):
-        for c in range(len(board[0])):
-            piece = board[r][c]
-            if not piece:
-                continue
-            color, ptype = piece
-            value = PIECE_VALUES.get(ptype, 0)
-
-            if color == current_turn:
-                score += value
-                if (r, c) in CENTER_SQUARES:
-                    score += 50
-            else:
-                score -= value
-                if (r, c) in CENTER_SQUARES:
-                    score -= 50
-
-    # Mobility
-    my_moves = count_all_moves(board, current_turn)
-    opponent_moves = count_all_moves(board, opponent)
-    score += 0.1 * (my_moves - opponent_moves)
-
-    # King safety
-    for r in range(len(board)):
-        for c in range(len(board[0])):
-            piece = board[r][c]
-            if piece and piece[0] == current_turn and piece[1] == 'king':
-                if (current_turn == 'white' and r == 4) or (current_turn == 'black' and r == 0):
-                    score += 5
-                break
-
-    # Heuristic penalties/bonuses per move 
-    if move_made:
-        from_sq, to_sq = move_made
-        piece = board[to_sq[0]][to_sq[1]]
-        if piece and piece[0] == current_turn:
-            vulnerability = get_post_move_vulnerability(board, to_sq, current_turn)
-            aggression = get_proximity_to_threats(board, to_sq, opponent)
-            score += aggression * 0.5  # Bonus for aggressive positioning
-            score -= vulnerability * 1.0  # Penalty for being exposed
-
-    return score
-
-
-def get_post_move_vulnerability(board, pos, color):
-    """Returns 1 if this piece can be captured next turn, else 0."""
-    opponent = 'black' if color == 'white' else 'white'
-    temp_cb = ChessBoard()
-    temp_cb.board = copy.deepcopy(board)
-    temp_cb.current_turn = opponent
-
-    for r in range(5):
-        for c in range(6):
-            piece = temp_cb.get_piece(r, c)
-            if piece and piece[0] == opponent:
-                if pos in temp_cb.get_valid_moves(r, c):
-                    return 1  # Vulnerable
-    return 0
-
-
-def get_proximity_to_threats(board, pos, opponent_color):
-    """Returns a score based on nearby high-value opponent pieces."""
-    proximity_score = 0
-    r0, c0 = pos
-    for r in range(len(board)):
-        for c in range(len(board[0])):
-            piece = board[r][c]
-            if piece and piece[0] == opponent_color:
-                distance = abs(r - r0) + abs(c - c0)
-                if distance <= 2:
-                    proximity_score += PIECE_VALUES.get(piece[1], 0) / (distance + 1)
-    return proximity_score
-
-
-def count_all_moves(board, color):
-    """Counts all possible moves for a specific player."""
-    temp_cb = ChessBoard()
-    temp_cb.board = copy.deepcopy(board)
-    temp_cb.current_turn = color
-
-    count = 0
-    for r in range(5):
-        for c in range(6):
-            piece = temp_cb.get_piece(r, c)
-            if piece and piece[0] == color:
-                moves = temp_cb.get_valid_moves(r, c)
-                count += len(moves)
-    return count
-
-def get_all_possible_moves(board, current_turn):
-    """Returns all possible moves for the current player."""
-    cb = ChessBoard()
-    cb.board = copy.deepcopy(board)
-    cb.current_turn = current_turn
-    
-    possible_moves = []
-    for r in range(5):
-        for c in range(6):
-            piece = cb.get_piece(r, c)
-            if piece and piece[0] == current_turn:
-                moves = cb.get_valid_moves(r, c)
-                for move in moves:
-                    possible_moves.append(((r, c), move))
-    
-    return possible_moves
-
-def make_move(board, current_turn, from_sq, to_sq):
-    """Makes a move and returns the updated board."""
-    cb = ChessBoard()
-    cb.board = copy.deepcopy(board)
-    cb.current_turn = current_turn
-
-    success = cb.move_piece(from_sq, to_sq)
-    if not success:
-        return None
-    
-    return cb.board
-
-def minimax(board, depth, maximizing, current_turn):
-    if depth == 0:
-        return evaluate_board(board, current_turn), None
-
-    possible_moves = get_all_possible_moves(board, current_turn)
-    if not possible_moves:
-        return evaluate_board(board, current_turn), None
-
-    next_turn = 'black' if current_turn == 'white' else 'white'
-    best_move = None
-
-    if maximizing:
-        best_score = float('-inf')
-        for (from_sq, to_sq) in possible_moves:
-            new_board = make_move(board, current_turn, from_sq, to_sq)
-            score, _ = minimax(new_board, depth - 1, False, next_turn)
-            score += evaluate_board(new_board, current_turn, (from_sq, to_sq))  # custom move evaluation
-
-            if score > best_score:
-                best_score = score
-                best_move = (from_sq, to_sq)
-    else:
-        best_score = float('inf')
-        for (from_sq, to_sq) in possible_moves:
-            new_board = make_move(board, current_turn, from_sq, to_sq)
-            score, _ = minimax(new_board, depth - 1, True, next_turn)
-            score += evaluate_board(new_board, current_turn, (from_sq, to_sq))
-
-            if score < best_score:
-                best_score = score
-                best_move = (from_sq, to_sq)
-
-    return best_score, best_move
-
-
-def get_ai_move(board, current_turn, depth):
-    """Returns the best move for the AI."""
-    all_moves = get_all_possible_moves(board, current_turn)
-
-    if not all_moves:
-        return None
-
-    best_move = None
-    best_eval = float('-inf')
-
-    for (from_sq, to_sq) in all_moves:
-        new_board = make_move(board, current_turn, from_sq, to_sq)
-        if new_board is None:
-            continue
-        score, _ = minimax(new_board, depth-1, False, 'black' if current_turn == 'white' else 'white')
-
-        if score > best_eval:
-            best_eval = score
-            best_move = (from_sq, to_sq)
+    def evaluate_board(self, board, color):
+        score = 0
+        for row in range(ROWS):
+            for col in range(COLS):
+                piece = board[row][col]
+                if piece:
+                    value = self.piece_values.get(piece[1], 0)
+                    if piece[0] == color:
+                        score += value  
+                    else:
+                        score -= value  
         
-    return best_move
+        center = [(2, 2), (2, 3), (3, 2), (3, 3)]
+        for (r, c) in center:
+            piece = board[r][c]
+            if piece and piece[0] == color:
+                score += 50
+            elif piece and piece[0] != color:
+                score -= 50
+        
+        return score
+
+    def minimax(self, board, depth, maximizing_player, current_color):
+        if depth == 0 or board.is_checkmate(current_color) or board.is_stalemate(current_color):
+            return self.evaluate_board(board.board, current_color)
+            
+        if maximizing_player:
+            max_eval = float('-inf')
+            for move in self.get_all_moves(board, current_color):
+                new_board = deepcopy(board)
+                new_board.move_piece(move[0], move[1])
+                eval = self.minimax(new_board, depth-1, False, current_color)
+                max_eval = max(max_eval, eval)
+            return max_eval
+        else:
+            min_eval = float('inf')
+            opponent_color = 'black' if current_color == 'white' else 'white'
+            for move in self.get_all_moves(board, opponent_color):
+                new_board = deepcopy(board)
+                new_board.move_piece(move[0], move[1])
+                eval = self.minimax(new_board, depth-1, True, current_color)
+                min_eval = min(min_eval, eval)
+            return min_eval
+
+    def get_all_moves(self, board, color):
+        moves = []
+        for row in range(ROWS):
+            for col in range(COLS):
+                piece = board.get_piece(row, col)
+                if piece and piece[0] == color:
+                    valid_moves = board.get_valid_moves(row, col)
+                    for move in valid_moves:
+                        moves.append(((row, col), move))
+        return moves
+
+    def get_best_move(self, board, current_color):
+        best_move = None
+        best_eval = float('-inf')
+        
+        for move in self.get_all_moves(board, current_color):
+            new_board = deepcopy(board)
+            new_board.move_piece(move[0], move[1])
+            current_eval = self.minimax(new_board, self.depth-1, False, current_color)
+            
+            if current_eval > best_eval:
+                best_eval = current_eval
+                best_move = move
+                
+        return best_move
