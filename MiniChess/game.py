@@ -92,6 +92,9 @@ class MiniChess5x6:
 
     def make_ai_move(self):
         move = get_ai_move(self.chess_board.board, self.chess_board.current_turn, depth=3)
+        if move is None:
+            self.chess_board.check_game_end_conditions()
+            return
         if move:
             from_sq, to_sq = move
             self.board_history = self.board_history[:self.history_index+1]

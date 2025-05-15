@@ -2,12 +2,12 @@ import copy
 from board import ChessBoard
 
 PIECE_VALUES = {
-    'pawn': 10,
-    'knight': 30,
-    'bishop': 30,
-    'rook': 50,
-    'queen': 90,
-    'king': 1000
+    'pawn': 100,
+    'knight': 320,
+    'bishop': 320,
+    'rook': 500,
+    'queen': 900,
+    'king': 20000
 }
 
 PIECE_ORDER = ['pawn', 'knight', 'bishop', 'rook', 'queen', 'king']
@@ -33,11 +33,11 @@ def evaluate_board(board, current_turn, move_made=None):
             if color == current_turn:
                 score += value
                 if (r, c) in CENTER_SQUARES:
-                    score += 3
+                    score += 50
             else:
                 score -= value
                 if (r, c) in CENTER_SQUARES:
-                    score -= 3
+                    score -= 50
 
     # Mobility
     my_moves = count_all_moves(board, current_turn)
@@ -140,7 +140,6 @@ def make_move(board, current_turn, from_sq, to_sq):
     
     return cb.board
 
-
 def minimax(board, depth, maximizing, current_turn):
     if depth == 0:
         return evaluate_board(board, current_turn), None
@@ -176,7 +175,24 @@ def minimax(board, depth, maximizing, current_turn):
     return best_score, best_move
 
 
-def get_ai_move(board, current_turn, depth=5):
+def get_ai_move(board, current_turn, depth):
     """Returns the best move for the AI."""
-    _, move = minimax(board, depth, True, current_turn)
-    return move
+    all_moves = get_all_possible_moves(board, current_turn)
+
+    if not all_moves:
+        return None
+
+    best_move = None
+    best_eval = float('-inf')
+
+    for (from_sq, to_sq) in all_moves:
+        new_board = make_move(board, current_turn, from_sq, to_sq)
+        if new_board is None:
+            continue
+        score, _ = minimax(new_board, depth-1, False, 'black' if current_turn == 'white' else 'white')
+
+        if score > best_eval:
+            best_eval = score
+            best_move = (from_sq, to_sq)
+        
+    return best_move
