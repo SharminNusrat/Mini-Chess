@@ -104,17 +104,20 @@ class MiniChessAI:
 
 
 
-    def minimax(self, board, depth, maximizing_player, current_color):
+    def minimax(self, board, depth, maximizing_player, current_color, alpha=float('-inf'), beta=float('inf')):
         if depth == 0 or board.is_checkmate(current_color) or board.is_stalemate(current_color):
             return self.evaluate_board(board.board, current_color)
-            
+
         if maximizing_player:
             max_eval = float('-inf')
             for move in self.get_all_moves(board, current_color):
                 new_board = deepcopy(board)
                 new_board.move_piece(move[0], move[1])
-                eval = self.minimax(new_board, depth-1, False, current_color)
+                eval = self.minimax(new_board, depth-1, False, current_color, alpha, beta)
                 max_eval = max(max_eval, eval)
+                alpha = max(alpha, eval)  # update alpha
+                if beta <= alpha:
+                    break  # prune the branch
             return max_eval
         else:
             min_eval = float('inf')
@@ -122,9 +125,13 @@ class MiniChessAI:
             for move in self.get_all_moves(board, opponent_color):
                 new_board = deepcopy(board)
                 new_board.move_piece(move[0], move[1])
-                eval = self.minimax(new_board, depth-1, True, current_color)
+                eval = self.minimax(new_board, depth-1, True, current_color, alpha, beta)
                 min_eval = min(min_eval, eval)
+                beta = min(beta, eval)  # update beta
+                if beta <= alpha:
+                    break  # prune the branch
             return min_eval
+
 
     def get_all_moves(self, board, color):
         moves = []
@@ -139,18 +146,17 @@ class MiniChessAI:
         return moves
 
     def get_best_move(self, board, current_color):
-        # print(f"Board type: {type(board)}")
         best_move = None
         best_eval = float('-inf')
-        
+
         for move in self.get_all_moves(board, current_color):
             new_board = deepcopy(board)
-            # print(f"new_board type: {type(board)}")
             new_board.move_piece(move[0], move[1])
-            current_eval = self.minimax(new_board, self.depth-1, False, current_color)
-            
+            current_eval = self.minimax(new_board, self.depth - 1, False, current_color,
+                                        alpha=float('-inf'), beta=float('inf'))
+
             if current_eval > best_eval:
                 best_eval = current_eval
                 best_move = move
-                
+
         return best_move
