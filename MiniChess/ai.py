@@ -1,12 +1,13 @@
 from copy import deepcopy
 from constants import COLS, ROWS
 from board import ChessBoard
+import time
 
 CENTER_SQUARES = {(2, 2), (2, 3), (3, 2), (3, 3)}
 
 class MiniChessAI:
     def __init__(self, depth=3):
-        self.depth = depth
+        self.max_depth = depth  
         self.piece_values = {
             'pawn': 100,
             'knight': 320,
@@ -15,18 +16,19 @@ class MiniChessAI:
             'queen': 900,
             'king': 20000
         }
+        self.time_limit = 1.0 
+        self.nodes_evaluated = 0
 
     def evaluate_board(self, board, current_turn, move_made=None):
         if isinstance(board, list):
             temp_board = ChessBoard()
             temp_board.board = board  
             board = temp_board
-        # print(f"board type: {type(board)}")
 
         score = 0
         opponent = 'black' if current_turn == 'white' else 'white'
 
-        # 1. Material Balance 
+       
         for row in range(ROWS):
             for col in range(COLS):
                 piece = board.get_piece(row, col)
@@ -37,7 +39,7 @@ class MiniChessAI:
                     else:
                         score -= value
 
-        # 2. Center Control 
+        
         for (r, c) in CENTER_SQUARES:
             piece = board.get_piece(r, c)
             if piece and piece[0] == current_turn:
@@ -45,12 +47,12 @@ class MiniChessAI:
             elif piece and piece[0] != current_turn:
                 score -= 50
 
-        # 3. Mobility 
+       
         my_moves = len(self.get_all_moves(board, current_turn))
         opponent_moves = len(self.get_all_moves(board, opponent))
         score += 0.1 * (my_moves - opponent_moves)
 
-        # 4. King Safety 
+        
         king_pos = self._find_king(board, current_turn)
         if king_pos:
             if current_turn == 'white' and king_pos[0] == 5:  # White king in back rank
@@ -58,7 +60,7 @@ class MiniChessAI:
             elif current_turn == 'black' and king_pos[0] == 0:  # Black king in back rank
                 score += 20
 
-        # 5. Move-Specific Heuristics 
+       
         if move_made:
             from_sq, to_sq = move_made
             piece = board[to_sq[0]][to_sq[1]]
@@ -71,7 +73,6 @@ class MiniChessAI:
         return score
 
     def _find_king(self, board, color):
-        # print(f"type in _find_king: {type(board)}")
         for row in range(ROWS):
             for col in range(COLS):
                 piece = board.get_piece(row, col)
@@ -102,9 +103,9 @@ class MiniChessAI:
                         proximity_score += self.piece_values.get(piece[1], 0) / (distance + 1)
         return proximity_score
 
-
-
     def minimax(self, board, depth, maximizing_player, current_color, alpha=float('-inf'), beta=float('inf')):
+        self.nodes_evaluated += 1
+        
         if depth == 0 or board.is_checkmate(current_color) or board.is_stalemate(current_color):
             return self.evaluate_board(board.board, current_color)
 
@@ -115,9 +116,9 @@ class MiniChessAI:
                 new_board.move_piece(move[0], move[1])
                 eval = self.minimax(new_board, depth-1, False, current_color, alpha, beta)
                 max_eval = max(max_eval, eval)
-                alpha = max(alpha, eval)  # update alpha
+                alpha = max(alpha, eval)
                 if beta <= alpha:
-                    break  # prune the branch
+                    break
             return max_eval
         else:
             min_eval = float('inf')
@@ -127,11 +128,10 @@ class MiniChessAI:
                 new_board.move_piece(move[0], move[1])
                 eval = self.minimax(new_board, depth-1, True, current_color, alpha, beta)
                 min_eval = min(min_eval, eval)
-                beta = min(beta, eval)  # update beta
+                beta = min(beta, eval)
                 if beta <= alpha:
-                    break  # prune the branch
+                    break
             return min_eval
-
 
     def get_all_moves(self, board, color):
         moves = []
@@ -146,17 +146,46 @@ class MiniChessAI:
         return moves
 
     def get_best_move(self, board, current_color):
+        """Use IDDFS with minimax and alpha-beta pruning to find the best move"""
         best_move = None
         best_eval = float('-inf')
-
-        for move in self.get_all_moves(board, current_color):
-            new_board = deepcopy(board)
-            new_board.move_piece(move[0], move[1])
-            current_eval = self.minimax(new_board, self.depth - 1, False, current_color,
-                                        alpha=float('-inf'), beta=float('inf'))
-
-            if current_eval > best_eval:
-                best_eval = current_eval
-                best_move = move
-
+        start_time = time.time()
+        
+        
+        for depth in range(1, self.max_depth + 1):
+            if time.time() - start_time > self.time_limit:
+                break  
+                
+            current_best_move = None
+            current_best_eval = float('-inf')
+            alpha = float('-inf')
+            beta = float('inf')
+            
+          
+            for move in self.get_all_moves(board, current_color):
+                new_board = deepcopy(board)
+                new_board.move_piece(move[0], move[1])
+                
+               
+                eval = self.minimax(
+                    new_board, 
+                    depth - 1, 
+                    False,
+                    current_color,
+                    alpha,
+                    beta
+                )
+                
+                if eval > current_best_eval:
+                    current_best_eval = eval
+                    current_best_move = move
+                    alpha = max(alpha, eval)
+            
+           
+            if time.time() - start_time <= self.time_limit:
+                best_move = current_best_move
+                best_eval = current_best_eval
+            else:
+                break
+        
         return best_move
